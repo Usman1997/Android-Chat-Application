@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <include
+        android:id="@+id/app_bar"
+        layout="@layout/app_bar_layout">
+
+
+    </include>
+
+    <de.hdodenhof.circleimageview.CircleImageView
+        android:id="@+id/image"
+        android:layout_width="150dp"
+        android:layout_height="150dp"
+        android:layout_below="@+id/app_bar"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="20dp"
+        android:src="@mipmap/user"
+        />
+
+    <ProgressBar
+        android:id="@+id/progress"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:visibility="invisible"
+        android:layout_below="@+id/app_bar"
+        android:layout_centerHorizontal="true"
+        android:indeterminateTint="@color/line"
+        android:layout_marginTop="70dp"
+        />
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/image"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="30dp"
+        android:text="Name"
+        android:textSize="25dp"
+        android:id="@+id/name"
+        />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/name"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="15dp"
+        android:text="@string/default_status"
+        android:textSize="15dp"
+        android:id="@+id/status"
+        />
+    <ImageButton
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_toRightOf="@+id/status"
+        android:src="@drawable/ic_edit"
+        android:layout_below="@+id/name"
+        android:layout_marginTop="15dp"
+        android:layout_marginLeft="15dp"
+        android:id="@+id/update_status"
+        android:background="@android:color/transparent"/>
+
+
+
+
+    <Button
+        android:layout_width="300dp"
+        android:layout_height="50dp"
+        android:padding="15dp"
+        android:layout_centerHorizontal="true"
+        android:background="@drawable/button_color_background"
+        android:layout_marginBottom="25dp"
+        android:text="Update Image"
+        android:textColor="@color/text_color"
+        android:textSize="16dp"
+        android:id="@+id/update_image"
+        android:layout_alignParentBottom="true"
+
+
+        />
+
+
+</RelativeLayout>
