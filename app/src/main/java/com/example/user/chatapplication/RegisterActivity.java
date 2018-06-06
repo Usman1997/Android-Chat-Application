@@ -96,20 +96,12 @@ public class RegisterActivity extends AppCompatActivity implements View.OnClickL
                         user_data.child("name").setValue(user_name);
                         user_data.child("status").setValue("Hey There! I am using WhatsApp");
                         user_data.child("thumb_image").setValue("default");
-
-
-                        storageReference.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                        user_data.child("image").setValue("default").addOnSuccessListener(new OnSuccessListener<Void>() {
                             @Override
-                            public void onSuccess(Uri uri) {
-                                String image_uri = uri.toString();
-                                user_data.child("image").setValue(image_uri).addOnSuccessListener(new OnSuccessListener<Void>() {
-                                    @Override
-                                    public void onSuccess(Void aVoid) {
-                                        progressBar.setVisibility(View.INVISIBLE);
-                                        startActivity(new Intent(RegisterActivity.this, MainActivity.class));
-                                        finishAffinity();
-                                    }
-                                });
+                            public void onSuccess(Void aVoid) {
+                                progressBar.setVisibility(View.INVISIBLE);
+                                startActivity(new Intent(RegisterActivity.this, MainActivity.class));
+                                finishAffinity();
                             }
                         }).addOnFailureListener(new OnFailureListener() {
                             @Override
@@ -117,6 +109,9 @@ public class RegisterActivity extends AppCompatActivity implements View.OnClickL
                                 progressBar.setVisibility(View.INVISIBLE);
                             }
                         });
+
+
+
 
                         } else {
                         Toast.makeText(RegisterActivity.this, "Registration Error", Toast.LENGTH_SHORT).show();

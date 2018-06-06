@@ -1,8 +1,11 @@
 package com.example.user.chatapplication;
 
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.provider.ContactsContract;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -16,6 +19,10 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.DataSource;
+import com.bumptech.glide.load.engine.GlideException;
+import com.bumptech.glide.request.RequestListener;
+import com.bumptech.glide.request.target.Target;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -29,9 +36,16 @@ import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
+import com.squareup.picasso.Callback;
+import com.squareup.picasso.NetworkPolicy;
+import com.squareup.picasso.Picasso;
 import com.theartofdev.edmodo.cropper.CropImage;
 
+import java.io.File;
+import java.nio.InvalidMarkException;
+
 import de.hdodenhof.circleimageview.CircleImageView;
+import id.zelory.compressor.Compressor;
 
 public class AccountSettingsActivity extends AppCompatActivity implements View.OnClickListener {
     Toolbar toolbar;
@@ -76,16 +90,51 @@ public class AccountSettingsActivity extends AppCompatActivity implements View.O
          user_id = auth.getCurrentUser().getUid();
 
          final DatabaseReference user_data = databaseReference.child(user_id);
+         user_data.keepSynced(true);
 
          user_data.addValueEventListener(new ValueEventListener() {
              @Override
              public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                  String User_name = (String)dataSnapshot.child("name").getValue();
                  String User_status = (String)dataSnapshot.child("status").getValue();
-                 String user_image = (String)dataSnapshot.child("image").getValue();
+                 final String user_image = (String)dataSnapshot.child("image").getValue();
                  name.setText(User_name);
                  status.setText(User_status);
-                 Glide.with(AccountSettingsActivity.this).load(user_image).into(image);
+                 if(!user_image.equals("default")){
+
+                     Picasso.get().load(user_image).networkPolicy(NetworkPolicy.OFFLINE).into(image, new Callback() {
+                         @Override
+                         public void onSuccess() {
+                             progressBar.setVisibility(View.INVISIBLE);
+                             image.setVisibility(View.VISIBLE);
+                         }
+
+                         @Override
+                         public void onError(Exception e) {
+                             Picasso.get().load(user_image).into(image);
+                             progressBar.setVisibility(View.INVISIBLE);
+                         }
+                     });
+
+
+//                     Glide.with(AccountSettingsActivity.this).load(user_image).listener(new RequestListener<Drawable>() {
+//                         @Override
+//                         public boolean onLoadFailed(@Nullable GlideException e, Object model, Target<Drawable> target, boolean isFirstResource) {
+//
+//                             return false;
+//                         }
+//
+//                         @Override
+//                         public boolean onResourceReady(Drawable resource, Object model, Target<Drawable> target, DataSource dataSource, boolean isFirstResource) {
+//
+//                             return false;
+//                         }
+//                     }).into(image);
+                 }else{
+                     progressBar.setVisibility(View.INVISIBLE);
+                     image.setVisibility(View.VISIBLE);
+                 }
+
 
 
              }
@@ -129,7 +178,8 @@ public class AccountSettingsActivity extends AppCompatActivity implements View.O
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == pick_image && resultCode == RESULT_OK) {
             uri = data.getData();
-            CropImage.activity(uri).setAspectRatio(1,1).start(this);
+            CropImage.activity(uri).setAspectRatio(1,1).setMinCropWindowSize(500,500)
+                    .start(this);
 
         }
 
@@ -137,10 +187,12 @@ public class AccountSettingsActivity extends AppCompatActivity implements View.O
             CropImage.ActivityResult result = CropImage.getActivityResult(data);
             if (resultCode == RESULT_OK) {
                 progressBar.setVisibility(View.VISIBLE);
+                image.setVisibility(View.INVISIBLE);
 
 
                 Uri resultUri = result.getUri();
-               final String UserID = auth.getCurrentUser().getUid();
+
+                final String UserID = auth.getCurrentUser().getUid();
                 final StorageReference filepath = storageReference.child(UserID + ".jpg");
 
                 filepath.putFile(resultUri).addOnCompleteListener(new OnCompleteListener<UploadTask.TaskSnapshot>() {
@@ -156,12 +208,14 @@ public class AccountSettingsActivity extends AppCompatActivity implements View.O
                                      DatabaseReference user_data = databaseReference.child(UserID);
                                      user_data.child("image").setValue(image_uri);
                                      progressBar.setVisibility(View.INVISIBLE);
+                                     image.setVisibility(View.VISIBLE);
                                  }
                              }).addOnFailureListener(new OnFailureListener() {
                                  @Override
                                  public void onFailure(@NonNull Exception e) {
                                      Toast.makeText(AccountSettingsActivity.this,"Fail in Retrieving image",Toast.LENGTH_SHORT).show();
                                      progressBar.setVisibility(View.INVISIBLE);
+                                     image.setVisibility(View.VISIBLE);
                                  }
                              });
                          }else{

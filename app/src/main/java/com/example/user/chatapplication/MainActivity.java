@@ -74,6 +74,9 @@ TabLayout tabLayout;
         if(item.getItemId() == R.id.settings){
             startActivity(new Intent(MainActivity.this,AccountSettingsActivity.class));
         }
+        if(item.getItemId() ==R.id.users){
+            startActivity(new Intent(MainActivity.this,AllUserActivity.class));
+        }
         return true;
     }
 }

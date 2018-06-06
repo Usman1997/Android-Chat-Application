@@ -95,6 +95,8 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                     if (task.isSuccessful()) {
                         Toast.makeText(LoginActivity.this, "Login Successful", Toast.LENGTH_SHORT).show();
                         progressBar.setVisibility(View.INVISIBLE);
+                        startActivity(new Intent(LoginActivity.this, MainActivity.class));
+                        finish();
 
                     } else {
                         Toast.makeText(LoginActivity.this, "Login Error", Toast.LENGTH_SHORT).show();
