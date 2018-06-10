@@ -50,20 +50,7 @@ public class UserRecyclerViewAdapter extends RecyclerView.Adapter<UserRecyclerVi
          final CircleImageView circleImageView = holder.circleImageView;
 
          if(!usersList.get(position).getImage().equals("default")){
-//             Glide.with(context).load(usersList.get(position).getImage()).listener(new RequestListener<Drawable>() {
-//                 @Override
-//                 public boolean onLoadFailed(@Nullable GlideException e, Object model, Target<Drawable> target, boolean isFirstResource) {
-//
-//                     holder.progressBar.setVisibility(View.INVISIBLE);
-//                     return false;
-//                 }
-//
-//                 @Override
-//                 public boolean onResourceReady(Drawable resource, Object model, Target<Drawable> target, DataSource dataSource, boolean isFirstResource) {
-//                     holder.progressBar.setVisibility(View.INVISIBLE);
-//                     return false;
-//                 }
-//             }).into(circleImageView);
+
 
 
              Picasso.get().load(usersList.get(position).getImage()).networkPolicy(NetworkPolicy.OFFLINE).into(circleImageView, new Callback() {
@@ -95,7 +82,7 @@ public class UserRecyclerViewAdapter extends RecyclerView.Adapter<UserRecyclerVi
            @Override
            public void onClick(View v) {
                Intent intent = new Intent(context,UserProfileActivity.class);
-               intent.putExtra("user_id",user_id);
+               intent.putExtra("from_user_id",user_id);
                intent.putExtra("user_name",user_name);
                intent.putExtra("user_status",user_status);
                intent.putExtra("user_image",user_image);

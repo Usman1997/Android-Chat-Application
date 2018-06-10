@@ -6,12 +6,17 @@ import android.support.design.widget.TabLayout;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.DragAndDropPermissions;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toolbar;
 
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ServerValue;
 
 public class MainActivity extends AppCompatActivity {
  private android.support.v7.widget.Toolbar toolbar;
@@ -20,6 +25,7 @@ FirebaseAuth auth;
 ViewPager mainPager;
 PagerViewAdapter pagerViewAdapter;
 TabLayout tabLayout;
+DatabaseReference databaseReference;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -28,6 +34,10 @@ TabLayout tabLayout;
         setSupportActionBar(toolbar);
         getSupportActionBar().setTitle("WhatsApp");
         auth = FirebaseAuth.getInstance();
+        String user_id = auth.getCurrentUser().getUid();
+
+        databaseReference = FirebaseDatabase.getInstance().getReference().child("Users").child(user_id);
+
 
         mainPager = (ViewPager)findViewById(R.id.mainPager);
         mainPager.setOffscreenPageLimit(2);
@@ -44,11 +54,22 @@ TabLayout tabLayout;
     }
 
     @Override
-    protected void onStart() {
+    public void onStart() {
         super.onStart();
         if(auth.getCurrentUser() == null){
          SendToMainActivity();
         }
+        else{
+            databaseReference.child("online").setValue("true");
+        }
+    }
+
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        databaseReference.child("online").setValue(ServerValue.TIMESTAMP);
+
     }
 
     private void SendToMainActivity(){
@@ -66,9 +87,22 @@ TabLayout tabLayout;
     public boolean onOptionsItemSelected(MenuItem item) {
         super.onOptionsItemSelected(item);
 
-        if(item.getItemId() == R.id.logout){
-            auth.signOut();
-            SendToMainActivity();
+        if(item.getItemId() == R.id.logout) {
+
+            DatabaseReference removeData = databaseReference.child("device_token");
+
+            removeData.removeValue().addOnSuccessListener(new OnSuccessListener<Void>() {
+                @Override
+                public void onSuccess(Void aVoid) {
+
+                    auth.signOut();
+                    SendToMainActivity();
+                }
+            });
+
+
+
+
         }
 
         if(item.getItemId() == R.id.settings){

@@ -90,12 +90,13 @@ public class RegisterActivity extends AppCompatActivity implements View.OnClickL
 
                     if (task.isSuccessful()) {
                         String user_id = auth.getCurrentUser().getUid();
-
+                        String token_id =  FirebaseInstanceId.getInstance().getToken();
 
                        final DatabaseReference user_data = database.child(user_id);
                         user_data.child("name").setValue(user_name);
                         user_data.child("status").setValue("Hey There! I am using WhatsApp");
                         user_data.child("thumb_image").setValue("default");
+                        user_data.child("device_token").setValue(token_id);
                         user_data.child("image").setValue("default").addOnSuccessListener(new OnSuccessListener<Void>() {
                             @Override
                             public void onSuccess(Void aVoid) {

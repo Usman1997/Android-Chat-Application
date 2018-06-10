@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/background_color">
+
+
+    <include layout="@layout/app_bar_layout"
+        android:id="@+id/app_bar">
+
+    </include>
+
+    <android.support.v4.widget.SwipeRefreshLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@+id/app_bar"
+        android:id="@+id/message_swipe_layout"
+        android:layout_above="@+id/tet_box">
+
+
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/recycleView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+        </android.support.v7.widget.RecyclerView>
+
+    </android.support.v4.widget.SwipeRefreshLayout>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:layout_alignParentBottom="true"
+        android:background="#f4fffe"
+        android:orientation="horizontal"
+        android:id="@+id/tet_box"
+        android:weightSum="10">
+
+
+
+        <ImageButton
+            android:layout_width="50dp"
+            android:layout_height="match_parent"
+            android:background="@android:color/transparent"
+            android:src="@drawable/ic_add_black_24dp"
+            android:id="@+id/add"/>
+
+        <EditText
+            android:layout_width="250dp"
+            android:layout_height="match_parent"
+            android:hint="Enter your Message"
+            android:gravity="center_vertical"
+            android:id="@+id/message"
+            android:paddingLeft="10dp"
+            android:background="@drawable/button_transparent_background"/>
+
+        <VideoView
+            android:layout_width="1dp"
+            android:layout_height="match_parent" />
+
+        <ImageButton
+            android:layout_width="80dp"
+            android:layout_height="match_parent"
+            android:background="@android:color/transparent"
+            android:src="@drawable/ic_arrow_forward_black_24dp"
+            android:id="@+id/sent"
+            android:layout_gravity="center_vertical"
+            android:padding="10dp"
+
+            />
+    </LinearLayout>
+
+
+
+</RelativeLayout>

@@ -35,6 +35,7 @@ public class ChangeStatusActivity extends AppCompatActivity implements View.OnCl
 
         toolbar = (android.support.v7.widget.Toolbar) findViewById(R.id.app_bar);
         setSupportActionBar(toolbar);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setTitle("Add About");
 
 

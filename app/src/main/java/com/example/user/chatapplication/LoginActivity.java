@@ -93,10 +93,27 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                 @Override
                 public void onComplete(@NonNull Task<AuthResult> task) {
                     if (task.isSuccessful()) {
-                        Toast.makeText(LoginActivity.this, "Login Successful", Toast.LENGTH_SHORT).show();
-                        progressBar.setVisibility(View.INVISIBLE);
-                        startActivity(new Intent(LoginActivity.this, MainActivity.class));
-                        finish();
+
+                        String token_id = FirebaseInstanceId.getInstance().getToken();
+                        String user_id = auth.getCurrentUser().getUid();
+                        DatabaseReference user_data = databaseReference.child(user_id);
+                        user_data.child("device_token").setValue(token_id).addOnSuccessListener(new OnSuccessListener<Void>() {
+                            @Override
+                            public void onSuccess(Void aVoid) {
+
+                                Toast.makeText(LoginActivity.this, "Login Successful", Toast.LENGTH_SHORT).show();
+                                progressBar.setVisibility(View.INVISIBLE);
+                                startActivity(new Intent(LoginActivity.this, MainActivity.class));
+                                finish();
+
+                            }
+                        }).addOnFailureListener(new OnFailureListener() {
+                            @Override
+                            public void onFailure(@NonNull Exception e) {
+                                Toast.makeText(LoginActivity.this, "Error", Toast.LENGTH_SHORT).show();
+                                progressBar.setVisibility(View.INVISIBLE);
+                            }
+                        });
 
                     } else {
                         Toast.makeText(LoginActivity.this, "Login Error", Toast.LENGTH_SHORT).show();

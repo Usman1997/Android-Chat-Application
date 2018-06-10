@@ -9,4 +9,5 @@
     <color name="text_color">#f4fffe</color>
     <color name="tool_bar_color">#FF07634E</color>
     <color name="line">#FF07634E</color>
+    <color name="background_color">#d8dada</color>
 </resources>

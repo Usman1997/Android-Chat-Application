@@ -1,5 +1,6 @@
 package com.example.user.chatapplication;
 
+import android.app.NotificationManager;
 import android.database.CursorIndexOutOfBoundsException;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -42,7 +43,7 @@ public class UserProfileActivity extends AppCompatActivity implements View.OnCli
     String CurrentUserID;
     String VisitedUserID;
     FirebaseAuth auth;
-    DatabaseReference CurrentUserData, VisitedUserData;
+    DatabaseReference CurrentUserData, VisitedUserData,NotificationDatabase;
 
     //0 for Not Friend
     //1 For Friend
@@ -62,10 +63,45 @@ public class UserProfileActivity extends AppCompatActivity implements View.OnCli
         send = (Button) findViewById(R.id.send_request);
         decline = (Button) findViewById(R.id.decline_request);
 
-        String UserName = getIntent().getStringExtra("user_name");
-        String UserStatus = getIntent().getStringExtra("user_status");
-       final String UserImage = getIntent().getStringExtra("user_image");
-        VisitedUserID = getIntent().getStringExtra("user_id");
+        VisitedUserID = getIntent().getStringExtra("from_user_id");
+
+        databaseReference.child(VisitedUserID).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                String UserName = (String)dataSnapshot.child("name").getValue();
+                String UserStatus = (String)dataSnapshot.child("status").getValue();
+                final String UserImage = (String)dataSnapshot.child("image").getValue();
+
+                name.setText(UserName);
+
+
+                name.setText(UserName);
+                status.setText(UserStatus);
+                if (!UserImage.equals("default")) {
+
+                    Picasso.get().load(UserImage).networkPolicy(NetworkPolicy.OFFLINE).into(imageView, new Callback() {
+                        @Override
+                        public void onSuccess() {
+
+                        }
+
+                        @Override
+                        public void onError(Exception e) {
+                            Picasso.get().load(UserImage).into(imageView);
+                        }
+                    });
+                }
+
+
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
+
+
 
         //state
         send_state =0;
@@ -77,22 +113,7 @@ public class UserProfileActivity extends AppCompatActivity implements View.OnCli
         VisitedUserData = databaseReference.child(VisitedUserID);
 
 
-        name.setText(UserName);
-        status.setText(UserStatus);
-        if (!UserImage.equals("default")) {
-//            Glide.with(UserProfileActivity.this).load(UserImage).into(imageView);
-            Picasso.get().load(UserImage).networkPolicy(NetworkPolicy.OFFLINE).into(imageView, new Callback() {
-                @Override
-                public void onSuccess() {
 
-                }
-
-                @Override
-                public void onError(Exception e) {
-                    Picasso.get().load(UserImage).into(imageView);
-                }
-            });
-        }
 
 
         send.setOnClickListener(this);
@@ -151,9 +172,24 @@ public class UserProfileActivity extends AppCompatActivity implements View.OnCli
                         @Override
                         public void onSuccess(Void aVoid) {
 
-                            send_state = 2;
-                            send.setText("Cancel Friend Request");
-                            Toast.makeText(UserProfileActivity.this, "Friend Request sent", Toast.LENGTH_SHORT).show();
+                            NotificationDatabase = databaseReference.child(VisitedUserID).child("Notifications").push();
+                            NotificationDatabase.child("from").setValue(CurrentUserID);
+                            NotificationDatabase.child("type").setValue("request").addOnSuccessListener(new OnSuccessListener<Void>() {
+                                @Override
+                                public void onSuccess(Void aVoid) {
+
+                                    send_state = 2;
+                                    send.setText("Cancel Friend Request");
+                                    decline.setEnabled(false);
+                                    decline.setVisibility(View.INVISIBLE);
+                                    Toast.makeText(UserProfileActivity.this, "Friend Request sent", Toast.LENGTH_SHORT).show();
+                                }
+                            });
+
+
+
+
+
                         }
                     });
 
@@ -197,13 +233,13 @@ public class UserProfileActivity extends AppCompatActivity implements View.OnCli
     private void AcceptFriendRequest() {
 
                 final String currentDate = DateFormat.getDateTimeInstance().format(new Date());
-                CurrentUserData.child("Friends").child(VisitedUserID).setValue(currentDate).addOnCompleteListener(new OnCompleteListener<Void>() {
+                CurrentUserData.child("Friends").child(VisitedUserID).child("date").setValue(currentDate).addOnCompleteListener(new OnCompleteListener<Void>() {
                     @Override
                     public void onComplete(@NonNull Task<Void> task) {
 
 
                         if(task.isSuccessful()){
-                            VisitedUserData.child("Friends").child(CurrentUserID).setValue(currentDate).addOnSuccessListener(new OnSuccessListener<Void>() {
+                            VisitedUserData.child("Friends").child(CurrentUserID).child("date").setValue(currentDate).addOnSuccessListener(new OnSuccessListener<Void>() {
                                 @Override
                                 public void onSuccess(Void aVoid) {
                                     send.setText("UnFriend");
@@ -318,4 +354,15 @@ public class UserProfileActivity extends AppCompatActivity implements View.OnCli
         });
     }
 
+    @Override
+    protected void onStop() {
+        super.onStop();
+        databaseReference.child(CurrentUserID).child("online").setValue("false");
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        databaseReference.child(CurrentUserID).child("online").setValue("true");
+    }
 }

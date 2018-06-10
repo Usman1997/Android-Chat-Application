@@ -59,6 +59,7 @@ public class AccountSettingsActivity extends AppCompatActivity implements View.O
     String user_id;
     FirebaseAuth auth;
     DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference().child("Users");
+    DatabaseReference user_data;
     StorageReference storageReference;
 
     ProgressBar progressBar;
@@ -70,6 +71,7 @@ public class AccountSettingsActivity extends AppCompatActivity implements View.O
 
         toolbar = (android.support.v7.widget.Toolbar) findViewById(R.id.app_bar);
         setSupportActionBar(toolbar);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setTitle("Account Settings");
 
         image = (CircleImageView)findViewById(R.id.image);
@@ -89,7 +91,7 @@ public class AccountSettingsActivity extends AppCompatActivity implements View.O
         storageReference = FirebaseStorage.getInstance().getReference().child("images");
          user_id = auth.getCurrentUser().getUid();
 
-         final DatabaseReference user_data = databaseReference.child(user_id);
+         user_data = databaseReference.child(user_id);
          user_data.keepSynced(true);
 
          user_data.addValueEventListener(new ValueEventListener() {
@@ -117,19 +119,6 @@ public class AccountSettingsActivity extends AppCompatActivity implements View.O
                      });
 
 
-//                     Glide.with(AccountSettingsActivity.this).load(user_image).listener(new RequestListener<Drawable>() {
-//                         @Override
-//                         public boolean onLoadFailed(@Nullable GlideException e, Object model, Target<Drawable> target, boolean isFirstResource) {
-//
-//                             return false;
-//                         }
-//
-//                         @Override
-//                         public boolean onResourceReady(Drawable resource, Object model, Target<Drawable> target, DataSource dataSource, boolean isFirstResource) {
-//
-//                             return false;
-//                         }
-//                     }).into(image);
                  }else{
                      progressBar.setVisibility(View.INVISIBLE);
                      image.setVisibility(View.VISIBLE);
@@ -228,4 +217,17 @@ public class AccountSettingsActivity extends AppCompatActivity implements View.O
         }
         }
     }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        user_data.child("online").setValue("false");
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+       user_data.child("online").setValue("true");
+    }
+
 }
