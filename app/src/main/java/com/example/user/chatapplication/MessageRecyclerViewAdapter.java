@@ -32,122 +32,94 @@ import de.hdodenhof.circleimageview.CircleImageView;
 
 public class MessageRecyclerViewAdapter  extends RecyclerView.Adapter<MessageRecyclerViewAdapter.ViewHolder> {
 
-    private List<Messages> messagesList;
+    private List<Messages> mMessageList;
+    private DatabaseReference mUserDatabase;
 
-    FirebaseAuth auth;
-    DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference().child("Users");
+    public MessageRecyclerViewAdapter(List<Messages> mMessageList) {
 
-    Context context;
-
-
-    public MessageRecyclerViewAdapter(List<Messages> messagesList,Context context) {
-        this.messagesList = messagesList;
-        this.context = context;
+        this.mMessageList = mMessageList;
 
     }
 
     @Override
-    public ViewHolder onCreateViewHolder(@NonNull final ViewGroup parent, final int viewType) {
-        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.activity_message_list_item,parent,false);
-        return new ViewHolder(view);
+    public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+
+        View v = LayoutInflater.from(parent.getContext())
+                .inflate(R.layout.activity_message_list_item ,parent, false);
+
+        return new ViewHolder(v);
+
+    }
+
+    public class ViewHolder extends RecyclerView.ViewHolder {
+
+        public TextView messageText;
+        public CircleImageView profileImage;
+        public TextView displayName;
+        public ImageView messageImage;
+
+        public ViewHolder(View view) {
+            super(view);
+
+            messageText = (TextView) view.findViewById(R.id.message_text_layout);
+            profileImage = (CircleImageView) view.findViewById(R.id.message_profile_layout);
+            displayName = (TextView) view.findViewById(R.id.name_text_layout);
+            messageImage = (ImageView) view.findViewById(R.id.message_image_layout);
+
+        }
     }
 
     @Override
-    public void onBindViewHolder(final @NonNull ViewHolder holder, int position) {
-        final CircleImageView circleImageView = holder.circleImageView;
+    public void onBindViewHolder(final ViewHolder viewHolder, int i) {
 
-
-        auth = FirebaseAuth.getInstance();
-        String CurrentUserID = auth.getCurrentUser().getUid();
-        Messages c = messagesList.get(position);
+        Messages c = mMessageList.get(i);
 
         String from_user = c.getFrom();
-        String type = c.getType();
+        String message_type = c.getType();
 
-        databaseReference.child(from_user).addValueEventListener(new ValueEventListener() {
+
+        mUserDatabase = FirebaseDatabase.getInstance().getReference().child("Users").child(from_user);
+
+        mUserDatabase.addValueEventListener(new ValueEventListener() {
             @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-             final String Image = (String) dataSnapshot.child("image").getValue();
-             String name = (String)dataSnapshot.child("name").getValue();
-              if(!Image.equals("default")){
-                  Picasso.get().load(Image).into(holder.circleImageView, new Callback() {
-                      @Override
-                      public void onSuccess() {
+            public void onDataChange(DataSnapshot dataSnapshot) {
 
-                      }
+                String name = dataSnapshot.child("name").getValue().toString();
+                String image = dataSnapshot.child("image").getValue().toString();
 
-                      @Override
-                      public void onError(Exception e) {
-                          Picasso.get().load(Image).into(holder.circleImageView);
-                      }
-                  });
-              }
+                viewHolder.displayName.setText(name);
+
+                Picasso.get().load(image)
+                        .placeholder(R.mipmap.user).into(viewHolder.profileImage);
+
             }
 
             @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
+            public void onCancelled(DatabaseError databaseError) {
 
             }
         });
 
+        if(message_type.equals("text")) {
+
+            viewHolder.messageText.setText(c.getMessage());
+            viewHolder.messageImage.setVisibility(View.INVISIBLE);
 
 
+        } else {
 
+            viewHolder.messageText.setVisibility(View.INVISIBLE);
+            Picasso.get().load(c.getMessage())
+                    .placeholder(R.mipmap.user).into(viewHolder.messageImage);
 
-
-
-
-
-
-        if(!from_user.equals("")) {
-            if (from_user.equals(CurrentUserID)) {
-                holder.message.setBackgroundColor(Color.WHITE);
-                holder.message.setTextColor(Color.BLACK);
-
-            } else {
-                holder.message.setBackgroundResource(R.drawable.button_color_background);
-                holder.message.setTextColor(Color.WHITE);
-            }
         }
-
-        if(type.equals("text")){
-            holder.message.setText( messagesList.get(position).getMessage());
-//            holder.imageView.setVisibility(View.INVISIBLE);
-        }else{
-//            holder.message.setVisibility(View.INVISIBLE);
-//            Picasso.get().load(messagesList.get(position).getMessage()).into(holder.imageView);
-//            holder.imageView.getLayoutParams().height=150;
-        }
-
-
-
-
-
-
 
     }
-
 
     @Override
     public int getItemCount() {
-        return messagesList.size();
+        return mMessageList.size();
     }
 
-    public class ViewHolder extends RecyclerView.ViewHolder{
-
-        private View view;
-        private CircleImageView circleImageView;
-        private TextView message;
-
-
-        public ViewHolder(View itemView){
-            super(itemView);
-            view=itemView;
-            circleImageView = (CircleImageView)view.findViewById(R.id.listview_image);
-            message = (TextView)view.findViewById(R.id.listview_message);
-
-
-        }
-    }
 }
 
