@@ -14,6 +14,7 @@ import android.widget.Toolbar;
 
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ServerValue;
@@ -68,7 +69,13 @@ DatabaseReference databaseReference;
     @Override
     protected void onStop() {
         super.onStop();
-        databaseReference.child("online").setValue(ServerValue.TIMESTAMP);
+
+        FirebaseUser user = auth.getCurrentUser();
+        if(user!=null){
+            databaseReference.child("online").setValue(ServerValue.TIMESTAMP);
+
+        }
+
 
     }
 

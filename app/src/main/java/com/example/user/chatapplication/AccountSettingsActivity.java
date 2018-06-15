@@ -218,16 +218,6 @@ public class AccountSettingsActivity extends AppCompatActivity implements View.O
         }
     }
 
-    @Override
-    protected void onStop() {
-        super.onStop();
-        user_data.child("online").setValue("false");
-    }
 
-    @Override
-    public void onStart() {
-        super.onStart();
-       user_data.child("online").setValue("true");
-    }
 
 }

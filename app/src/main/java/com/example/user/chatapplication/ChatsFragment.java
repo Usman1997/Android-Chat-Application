@@ -13,7 +13,9 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.example.user.chatapplication.models.Conv;
 import com.example.user.chatapplication.models.Friends;
@@ -26,6 +28,8 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
+import com.squareup.picasso.Callback;
+import com.squareup.picasso.NetworkPolicy;
 import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
@@ -37,21 +41,17 @@ import de.hdodenhof.circleimageview.CircleImageView;
 public class ChatsFragment extends Fragment {
 
 
-
-    private RecyclerView recyclerView;
+    private RecyclerView mConvList;
 
     private DatabaseReference mConvDatabase;
-
+    private DatabaseReference mMessageDatabase;
+    private DatabaseReference mUsersDatabase;
 
     private FirebaseAuth mAuth;
 
     private String mCurrent_user_id;
 
-
-
-    ChatRecyclerViewAdapter chatRecyclerViewAdapter;
-    private List<Conv> convList;
-
+    private View mMainView;
 
     public ChatsFragment() {
 
@@ -61,10 +61,9 @@ public class ChatsFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+        mMainView = inflater.inflate(R.layout.fragment_chats, container, false);
 
-        View view = inflater.inflate(R.layout.fragment_chats, container, false);
-
-        recyclerView = (RecyclerView) view.findViewById(R.id.recycleView);
+        mConvList = (RecyclerView) mMainView.findViewById(R.id.recycleView);
         mAuth = FirebaseAuth.getInstance();
 
         mCurrent_user_id = mAuth.getCurrentUser().getUid();
@@ -72,51 +71,171 @@ public class ChatsFragment extends Fragment {
         mConvDatabase = FirebaseDatabase.getInstance().getReference().child("Chat").child(mCurrent_user_id);
 
         mConvDatabase.keepSynced(true);
+        mUsersDatabase = FirebaseDatabase.getInstance().getReference().child("Users");
+        mMessageDatabase = FirebaseDatabase.getInstance().getReference().child("messages").child(mCurrent_user_id);
+        mUsersDatabase.keepSynced(true);
 
-
-
-
-
-        convList = new ArrayList<>();
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getContext());
         linearLayoutManager.setReverseLayout(true);
         linearLayoutManager.setStackFromEnd(true);
 
-        chatRecyclerViewAdapter = new ChatRecyclerViewAdapter(convList,getContext());
-        recyclerView.setHasFixedSize(true);
-        recyclerView.setLayoutManager(linearLayoutManager);
+        mConvList.setHasFixedSize(true);
+        mConvList.setLayoutManager(linearLayoutManager);
 
-        recyclerView.setAdapter(chatRecyclerViewAdapter);
 
-        return view;
+        // Inflate the layout for this fragment
+        return mMainView;
     }
 
 
     @Override
     public void onStart() {
         super.onStart();
-        convList.clear();
-        mConvDatabase.addValueEventListener(new ValueEventListener() {
+        Query conversationQuery = mConvDatabase.orderByChild("timestamp");
+
+        FirebaseRecyclerAdapter<Conv, ConvViewHolder> firebaseConvAdapter = new FirebaseRecyclerAdapter<Conv, ConvViewHolder>(
+                Conv.class,
+                R.layout.activity_listview_item,
+                ConvViewHolder.class,
+                conversationQuery
+        ) {
             @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                for(DataSnapshot ConvList : dataSnapshot.getChildren()){
+            protected void populateViewHolder(final ConvViewHolder convViewHolder, final Conv conv, int i) {
 
-                    String user_id = ConvList.getKey();
-                    Conv conv =ConvList.getValue(Conv.class).WithId(user_id);
-                    convList.add(conv);
-                    chatRecyclerViewAdapter.notifyDataSetChanged();
-                }
+
+
+                final String key = getRef(i).getKey();
+
+                Query lastMessageQuery = mMessageDatabase.child(key).limitToLast(1);
+
+                lastMessageQuery.addChildEventListener(new ChildEventListener() {
+                    @Override
+                    public void onChildAdded(DataSnapshot dataSnapshot, String s) {
+
+                        String data = dataSnapshot.child("message").getValue().toString();
+                        convViewHolder.setMessage(data, conv.isSeen());
+
+                    }
+
+                    @Override
+                    public void onChildChanged(DataSnapshot dataSnapshot, String s) {
+
+                    }
+
+                    @Override
+                    public void onChildRemoved(DataSnapshot dataSnapshot) {
+
+                    }
+
+                    @Override
+                    public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+
+                    }
+
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) {
+
+                    }
+                });
+
+
+                mUsersDatabase.child(key).addValueEventListener(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+
+
+
+
+
+                        final String userName = (String)dataSnapshot.child("name").getValue();
+                        String image = (String)dataSnapshot.child("image").getValue();
+
+                        convViewHolder.setName(userName);
+                        convViewHolder.setImage(image);
+
+                        convViewHolder.mView.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View view) {
+
+
+                                Intent chatIntent = new Intent(getContext(), ChatActivity.class);
+                                chatIntent.putExtra("from_user_id",key);
+                                startActivity(chatIntent);
+
+                            }
+                        });
+
+
+                    }
+
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) {
+
+                    }
+                });
+
             }
+        };
 
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
+        mConvList.setAdapter(firebaseConvAdapter);
 
-            }
-        });
     }
 
+    public static class ConvViewHolder extends RecyclerView.ViewHolder {
+
+        View mView;
+        private CircleImageView circleImageView;
+        private TextView name;
+        private TextView message;
+        private ProgressBar progressBar;
+
+        public ConvViewHolder(View itemView) {
+            super(itemView);
+            mView = itemView;
+            circleImageView = (CircleImageView)mView.findViewById(R.id.listview_image);
+            name = (TextView)mView.findViewById(R.id.listview_name);
+            message = (TextView)mView.findViewById(R.id.listview_status);
+            progressBar = (ProgressBar)mView.findViewById(R.id.progress);
 
 
+        }
 
+
+        public  void setMessage(String msg,boolean isSeen) {
+
+            message.setText(msg);
+            if (isSeen) {
+                message.setTypeface(message.getTypeface(), Typeface.NORMAL);
+            } else {
+                message.setTypeface(message.getTypeface(), Typeface.BOLD);
+            }
+        }
+
+
+            public void setName(String UserName){
+
+            name.setText(UserName);
+        }
+        public void setImage(final String ImageUrl) {
+
+            if (!ImageUrl.equals("default")) {
+                Picasso.get().load(ImageUrl).networkPolicy(NetworkPolicy.OFFLINE).into(circleImageView, new Callback() {
+                    @Override
+                    public void onSuccess() {
+                        progressBar.setVisibility(View.INVISIBLE);
+
+                    }
+
+                    @Override
+                    public void onError(Exception e) {
+                        Picasso.get().load(ImageUrl).into(circleImageView);
+                        progressBar.setVisibility(View.INVISIBLE);
+                    }
+                });
+            }
+        }
+
+
+    }
 
 }
